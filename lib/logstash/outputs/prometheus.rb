@@ -36,11 +36,6 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
     end
   end
 
-  def encode(event)
-    encoded = @format ? event.sprintf(@format) : event.to_s
-    @on_event.call(event, encoded)
-  end
-
   public
   def encode(event)
     messages = []
