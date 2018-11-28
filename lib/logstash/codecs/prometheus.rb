@@ -29,7 +29,7 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
           keys = []
           vars.each do |var|
             key, value = var.split("=")
-            keys << key
+            keys << key.downcase
             labels[key.downcase] = value.gsub!(/^\"|\"?$/, "")
           end
           custom_metric_name = keys.unshift(outside.downcase).join('_')
