@@ -1,15 +1,10 @@
 # encoding: utf-8
 require "logstash/codecs/base"
 require "logstash/codecs/line"
+require 'json'
 
 class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
   config_name "prometheus"
-
-  # Include only regex matched metric names
-  config :include_metrics, :validate => :array, :default => [ ".*" ]
-
-  # Exclude regex matched metric names, by default exclude unresolved %{field} strings
-  config :exclude_metrics, :validate => :array, :default => [ "%\{[^}]+\}" ]
 
   public
   def register
@@ -24,7 +19,7 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
         unless metric_name.match(/^.+{.+}$/)
           yield LogStash::Event.new(metric_name => metric_value.to_f)
         else
-          outside, inside = string.match(/^(.+){(.+)}$/).captures
+          outside, inside = metric_name.match(/^(.+){(.+)}$/).captures
           vars = inside.split(",")
           vars.each do |var|
             key, value = var.split("=")
@@ -38,15 +33,12 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
 
   public
   def encode(event)
-    messages = []
+    h = {}
     event.to_hash.each do |metric_name,metric_value|
-      next unless @include_metrics.empty? || @include_metrics.any? { |regexp| metric_name.match(regexp) }
-      next if @exclude_metrics.any? {|regexp| metric_name.match(regexp)}
-      messages << "#{metric_name} #{metric_value.to_s}"
+      h[metric_name] = metric_value
     end
-    unless messages.empty?
-      message = messages.join(NL) + NL
-      @on_event.call(event, message)
+    unless h.empty?
+      @on_event.call(event, h.to_json)
     end
   end
 
