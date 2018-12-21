@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name          = 'logstash-codec-prometheus'
-  s.version       = '0.3.0'
+  s.version       = '0.5.0'
   s.licenses      = ['Apache-2.0']
   s.summary       = 'Reads `prometheus` formatted lines'
   s.description   = 'This gem is a Logstash plugin required to be installed on top of the Logstash core pipeline using $LS_HOME/bin/logstash-plugin install gemname. This gem is not a stand-alone program'

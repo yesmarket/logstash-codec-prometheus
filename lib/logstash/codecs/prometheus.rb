@@ -6,9 +6,6 @@ require 'json'
 class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
   config_name "prometheus"
 
-  # create individual events for each metric
-  config :multi_event, :validate => :boolean, :default => false
-
   public
   def register
     @lines = LogStash::Codecs::Line.new
@@ -16,41 +13,36 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
 
   public
   def decode(data)
-    events = []
+    metrics = []
+    previous_message = nil
     @lines.decode(data) do |event|
       unless event.get("message").start_with?("#")
-        metric_name, metric_value = event.get("message").split(" ")
-        unless metric_name.match(/^.+{.+}$/)
-          events << {metric_name => metric_value.to_f}
+        name, value = event.get("message").split(" ")
+        type = previous_message.match(/^# TYPE .+ (.+)$/).captures unless previous_message.nil?
+        metric = {}
+        unless name.match(/^.+{.+}$/)
+          metric['name'] = name
+          metric['value'] = value.to_f
+          metric['type'] = type unless type.nil?
         else
-          outside, inside = metric_name.match(/^(.+){(.+)}$/).captures
-          vars = inside.split(",")
-          labels = {}
-          keys = []
-          vars.each do |var|
-            key, value = var.split("=")
-            keys << key.downcase
-            labels[key.downcase] = value.gsub!(/^\"|\"?$/, "")
+          outside, inside = name.match(/^(.+){(.+)}$/).captures
+          metric['name'] = outside
+          metric['value'] = value.to_f
+          metric['type'] = type unless type.nil?
+          kvps = inside.split(",")
+          dimensions = {}
+          kvps.each do |kvp|
+            key, value = kvp.split("=")
+            dimensions[key.downcase] = value.gsub!(/^\"|\"?$/, "")
           end
-          custom_metric_name = keys.unshift(outside.downcase).join('_')
-          events << {custom_metric_name => {outside.downcase => metric_value.to_f, "labels" => labels}}
+          metric['dimensions'] = dimensions
         end
+        metrics << metric
       end
+      previous_message = event.get("message").match(/^# TYPE .+ .+$/) ? event.get("message") : nil
     end
-    unless events.empty?
-      if @multi_event
-        events.each do |event|
-          yield LogStash::Event.new(event)
-        end
-      else
-        hash = {}
-        events.each do |event|
-          event.to_h.each do |metric_name, metric_value|
-            hash[metric_name] = metric_value
-          end
-        end
-        yield LogStash::Event.new(hash)
-      end
+    unless metrics.empty?
+      yield LogStash::Event.new({"metrics" => metrics})
     end
   end
 
