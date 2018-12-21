@@ -1,10 +1,12 @@
+# Overview
+
 This codec translates prometheus data into json. For example:
 
 The following prometheus data:
 ```ruby
 # HELP go_memstats_mallocs_total Total number of mallocs.
 # TYPE go_memstats_mallocs_total counter
-go_memstats_mallocs_total 
+go_memstats_mallocs_total 1.1002486092e+10
 # HELP go_memstats_mcache_inuse_bytes Number of bytes in use by mcache structures.
 # TYPE go_memstats_mcache_inuse_bytes gauge
 go_memstats_mcache_inuse_bytes 3472
@@ -13,8 +15,8 @@ go_memstats_mcache_inuse_bytes 3472
 node_cpu_seconds_total{cpu="0",mode="idle"} 600118.2
 node_cpu_seconds_total{cpu="0",mode="iowait"} 967.03
 ```
-would get tanslated to
 
+Would get tanslated to
 ```json
 {
   "metrics": [

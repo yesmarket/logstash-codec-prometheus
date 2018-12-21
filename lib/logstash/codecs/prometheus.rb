@@ -18,7 +18,7 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
     @lines.decode(data) do |event|
       unless event.get("message").start_with?("#")
         name, value = event.get("message").split(" ")
-        type = previous_message.match(/^# TYPE .+ (.+)$/).captures unless previous_message.nil?
+        type = previous_message.match(/^# TYPE .+ (.+)$/).captures.first unless previous_message.nil?
         metric = {}
         unless name.match(/^.+{.+}$/)
           metric['name'] = name
