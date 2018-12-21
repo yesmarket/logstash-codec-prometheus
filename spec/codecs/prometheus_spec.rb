@@ -46,9 +46,16 @@ describe LogStash::Codecs::Prometheus do
 		end
 
 		it "should include type if exists in comment" do
-			codec.decode("# TYPE test1 counter\ntest1 1") do |event|
+			codec.decode("# TYPE test1 counter\ntest1 1\n") do |event|
 				insist {event.is_a?(LogStash::Event)}
 				insist {event.get("metrics")} == [{"name"=>"test1","value"=>1.to_f,"type"=>"counter"}]
+			end
+		end
+
+		it "should be able to process high precision numbers" do
+			codec.decode("test 1.1002486092e+10") do |event|
+				insist {event.is_a?(LogStash::Event)}
+				insist {event.get("metrics")} == [{"name"=>"test","value"=>1.1002486092e+10.to_f}]
 			end
 		end
 
@@ -61,8 +68,6 @@ describe LogStash::Codecs::Prometheus do
 			event = LogStash::Event.new(data)
 			got_event = false
 			codec.on_event do |event, message|
-				puts event
-				puts message
 				insist {message.chomp} == event.to_json
 				got_event = true
 			end
