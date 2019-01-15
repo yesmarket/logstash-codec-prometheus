@@ -13,6 +13,7 @@ class LogStash::Codecs::Prometheus < LogStash::Codecs::Base
 
   public
   def decode(data)
+    data = "#{data}\n" unless data.match(/\n$/)
     metrics = []
     previous_message = nil
     @lines.decode(data) do |event|

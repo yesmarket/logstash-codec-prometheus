@@ -19,6 +19,6 @@ Gem::Specification.new do |s|
 
   # Gem dependencies
   s.add_runtime_dependency "logstash-core-plugin-api", "~> 2.0"
-  s.add_runtime_dependency 'logstash-codec-line'
-  s.add_development_dependency 'logstash-devutils'
+  s.add_runtime_dependency 'logstash-codec-line', "~> 3.0"
+  s.add_development_dependency 'logstash-devutils', "~> 1.3"
 end

@@ -2,3 +2,4 @@
 .mvn
 Gemfile.lock
 *.gem
+*.orig
